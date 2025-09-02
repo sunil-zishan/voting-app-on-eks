@@ -1,0 +1,18 @@
+- name: Pull PostgreSQL Image
+  community.docker.docker_image:
+    name: postgres
+    tag: 15-alpine
+    source: pull
+
+- name: Run PostgreSQL Container
+  community.docker.docker_container:
+    name: postgres
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    env:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    state: started
+    restart_policy: always

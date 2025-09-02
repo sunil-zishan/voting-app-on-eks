@@ -1,0 +1,5 @@
+- name: Deploy PostgreSQL database
+  hosts: postgres_group
+  become: yes
+  roles:
+    - postgres

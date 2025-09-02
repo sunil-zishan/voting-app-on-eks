@@ -1,0 +1,10 @@
+- name: Inject Redis and Postgres into /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+    state: present
+  loop:
+    - "{{ hostvars['redis']['ansible_default_ipv4']['address'] }} redis"
+    - "{{ hostvars['postgres']['ansible_default_ipv4']['address'] }} postgres"
+  become: true
+  delegate_to: "{{ inventory_hostname }}"

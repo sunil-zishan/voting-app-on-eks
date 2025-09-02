@@ -1,0 +1,56 @@
+- name: Include common host injection
+  import_role:
+    name: common
+    tasks_from: inject_hosts.yml
+
+- name: Wait for Redis from worker host
+  ansible.builtin.wait_for:
+    host: "{{ hostvars['redis']['ansible_default_ipv4']['address'] }}"
+    port: 6379
+    timeout: 30
+  delegate_to: "{{ inventory_hostname }}"
+  register: redis_ready
+
+- name: Wait for Postgres from worker host
+  ansible.builtin.wait_for:
+    host: "{{ hostvars['postgres']['ansible_default_ipv4']['address'] }}"
+    port: 5432
+    timeout: 60
+  delegate_to: "{{ inventory_hostname }}"
+  register: postgres_ready
+
+- name: Log Redis wait time
+  ansible.builtin.debug:
+    msg: "Redis was reachable in {{ redis_ready.elapsed }} seconds"
+  when: not redis_ready.failed
+
+- name: Log Postgres wait time
+  ansible.builtin.debug:
+    msg: "Postgres was reachable in {{ postgres_ready.elapsed }} seconds"
+  when: not postgres_ready.failed
+
+- name: Pull Worker Image
+  community.docker.docker_image:
+    name: sunilzishan/worker-app
+    source: pull
+    tag: latest
+  when: not redis_ready.failed and not postgres_ready.failed
+
+- name: Run Worker Container
+  community.docker.docker_container:
+    name: worker
+    image: sunilzishan/worker-app:latest
+    env:
+      DB_HOST: "{{ hostvars['postgres']['ansible_default_ipv4']['address'] }}"
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      REDIS_HOST: "{{ hostvars['redis']['ansible_default_ipv4']['address'] }}"
+    state: started
+    restart_policy: always
+  when: not redis_ready.failed and not postgres_ready.failed
+
+- name: Log failure if dependencies are not ready
+  ansible.builtin.debug:
+    msg: "Worker container not started because Redis or Postgres is not ready."
+  when: redis_ready.failed or postgres_ready.failed

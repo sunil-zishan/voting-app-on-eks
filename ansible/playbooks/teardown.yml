@@ -1,0 +1,45 @@
+---
+- name: Teardown microservices infrastructure
+  hosts: all
+  become: true
+  tasks:
+
+    - name: Stop all running containers
+      shell: docker ps -q | xargs -r docker stop
+      ignore_errors: true
+
+    - name: Remove all containers
+      shell: docker ps -a -q | xargs -r docker rm
+      ignore_errors: true
+
+    - name: Remove all Docker images
+      shell: docker images -q | xargs -r docker rmi -f
+      ignore_errors: true
+
+    - name: Uninstall Docker
+      apt:
+        name: docker.io
+        state: absent
+      when: ansible_os_family == "Debian"
+
+    - name: Remove Docker config directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/docker
+        - /var/lib/docker
+
+    - name: Clean /etc/hosts entries for Redis and Postgres
+      lineinfile:
+        path: /etc/hosts
+        regexp: "{{ item }}"
+        state: absent
+      loop:
+        - 'redis'
+        - 'postgres'
+        
+    - name: Confirm teardown complete
+      ansible.builtin.debug:
+        msg: "Microservices infrastructure teardown complete."
+

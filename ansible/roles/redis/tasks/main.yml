@@ -1,0 +1,14 @@
+- name: Pull Redis Image
+  community.docker.docker_image:
+    name: redis
+    tag: alpine
+    source: pull
+
+- name: Run Redis Container
+  community.docker.docker_container:
+    name: redis
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    state: started
+    restart_policy: always

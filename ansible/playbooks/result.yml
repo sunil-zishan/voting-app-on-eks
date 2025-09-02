@@ -1,0 +1,5 @@
+- name: Deploy Result frontend
+  hosts: result_group
+  become: yes
+  roles:
+    - result

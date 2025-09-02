@@ -1,0 +1,46 @@
+- name: Include common host injection
+  import_role:
+    name: common
+    tasks_from: inject_hosts.yml
+
+- name: Wait for Postgres from result host
+  ansible.builtin.wait_for:
+    host: "{{ hostvars['postgres']['ansible_default_ipv4']['address'] }}"
+    port: 5432
+    timeout: 60
+  delegate_to: "{{ inventory_hostname }}"
+  register: postgres_ready
+
+- name: Log Postgres wait time
+  ansible.builtin.debug:
+    msg: "Postgres was reachable in {{ postgres_ready.elapsed }} seconds"
+  when: not postgres_ready.failed
+
+- name: Pull Result Image
+  community.docker.docker_image:
+    name: sunilzishan/result-app
+    source: pull
+    tag: latest
+  when: not postgres_ready.failed
+
+- name: Run Result Container
+  community.docker.docker_container:
+    name: result
+    image: sunilzishan/result-app:latest
+    ports:
+      - "8082:80"
+    env:
+      PORT: "80"
+      PG_HOST: "{{ hostvars['postgres']['ansible_default_ipv4']['address'] }}"
+      PG_PORT: "5432"
+      PG_USER: postgres
+      PG_PASSWORD: postgres
+      PG_DATABASE: postgres
+    state: started
+    restart_policy: always
+  when: not postgres_ready.failed
+
+- name: Log failure if Postgres is not ready
+  ansible.builtin.debug:
+    msg: "Result container not started because Postgres is not ready."
+  when: postgres_ready.failed
