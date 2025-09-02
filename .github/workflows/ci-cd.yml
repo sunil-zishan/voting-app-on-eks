@@ -37,7 +37,7 @@ jobs:
         with:
           context: ./vote
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/vote:${{ env.IMAGE_TAG }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/voting-app:${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -46,7 +46,7 @@ jobs:
         with:
           context: ./result
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/result:${{ env.IMAGE_TAG }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/result-app:${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -55,7 +55,7 @@ jobs:
         with:
           context: ./worker
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/worker:${{ env.IMAGE_TAG }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/worker-app:${{ env.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -64,7 +64,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
+          aws-region: ca-west-1
 
       - name: Install eksctl
         run: |
@@ -78,13 +78,13 @@ jobs:
           sudo mv kubectl /usr/local/bin/
 
       - name: Update kubeconfig
-        run: eksctl utils write-kubeconfig --cluster romain-voting-app-cluster --region eu-west-3
+        run: eksctl utils write-kubeconfig --cluster sunil-voting-app-cluster --region ca-west-1
 
       - name: Update image tags in manifests
         run: |
-          sed -i "s|sunilzishan/vote:.*|sunilzishan/vote:${{ env.IMAGE_TAG }}|g" k8s/vote-deployment.yaml
-          sed -i "s|sunilzishan/result:.*|sunilzishan/result:${{ env.IMAGE_TAG }}|g" k8s/result-deployment.yaml
-          sed -i "s|sunilzishan/worker:.*|sunilzishan/worker:${{ env.IMAGE_TAG }}|g" k8s/worker-deployment.yaml
+          sed -i "s|sunilzishan/voting-app:.*|sunilzishan/voting-app:${{ env.IMAGE_TAG }}|g" k8s/vote/vote-deployment.yaml
+          sed -i "s|sunilzishan/result-app:.*|sunilzishan/result-app:${{ env.IMAGE_TAG }}|g" k8s/result/result-deployment.yaml
+          sed -i "s|sunilzishan/worker-app:.*|sunilzishan/worker-app:${{ env.IMAGE_TAG }}|g" k8s/worker/worker-deployment.yaml
 
       - name: Apply Kubernetes manifests
-        run: kubectl apply -f k8s/
+        run: kubectl apply -R -f k8s/
