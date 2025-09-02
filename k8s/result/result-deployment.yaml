@@ -17,22 +17,28 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: result
-          image: sunilzishan/result:latest
+          image: sunilzishan/result-app:latest
           ports:
             - containerPort: 80
           env:
-            - name: POSTGRES_HOST
-              value: postgres-service
-            - name: POSTGRES_USER
+            - name: PORT
+              value: "80"
+            - name: PG_HOST
+              value: db
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_USER
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
+            - name: PG_DATABASE
+              value: postgres
           resources:
             requests:
               cpu: "100m"

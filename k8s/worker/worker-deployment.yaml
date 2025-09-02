@@ -17,22 +17,24 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: worker
-          image: sunilzishan/worker:latest
+          image: sunilzishan/worker-app:latest
           env:
-            - name: REDIS_HOST
-              value: redis-service
-            - name: POSTGRES_HOST
-              value: postgres-service
-            - name: POSTGRES_USER
+            - name: DB_HOST
+              value: db
+            - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
+            - name: DB_NAME
+              value: postgres
+            - name: REDIS_HOST
+              value: redis-service
           resources:
             requests:
               cpu: "100m"

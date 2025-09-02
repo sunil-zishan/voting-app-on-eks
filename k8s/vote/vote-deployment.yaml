@@ -17,24 +17,28 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: vote
-          image: sunilzishan/vote:latest
+          image: sunilzishan/voting-app:latest
           ports:
             - containerPort: 80
           env:
             - name: REDIS_HOST
               value: redis-service
+            - name: REDIS_PORT
+              value: "6379"
             - name: POSTGRES_HOST
-              value: postgres-service
+              value: db
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: postgres-secret
                   key: POSTGRES_PASSWORD
+            - name: FLASK_ENV
+              value: production
           resources:
             requests:
               cpu: "100m"
